@@ -808,6 +808,8 @@ class TransformerBlock(tf.keras.layers.Layer):
   def call(self, inputs, **kwargs):
     """Implements call() for the layer."""
     (input_tensor, attention_mask) = tf_utils.unpack_inputs(inputs)
+    input_tensor = self.attention_layer_norm(input_tensor)
+
     attention_output = self.attention_layer(
         from_tensor=input_tensor,
         to_tensor=input_tensor,
@@ -826,7 +828,8 @@ class TransformerBlock(tf.keras.layers.Layer):
     layer_output = self.output_dense(intermediate_output)
     layer_output = self.output_dropout(layer_output,training=kwargs.get('training', False))
     # Use float32 in keras layer norm for numeric stability
-    layer_output = self.output_layer_norm(layer_output + attention_output)
+    #layer_output = self.output_layer_norm(layer_output + attention_output)
+    layer_output = layer_output + attention_output
     if self.float_type == tf.float16:
       layer_output = tf.cast(layer_output, tf.float16)
     return layer_output
